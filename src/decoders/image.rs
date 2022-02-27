@@ -31,7 +31,10 @@ pub struct RawImage {
   pub cfa: CFA,
   /// how much to crop the image to get all the usable area, order is top, right, bottom, left
   pub crops: [usize;4],
-
+  /// bits per sample
+  pub bps: usize,
+  /// position in buffer where image data begins
+  pub offset: usize,
   /// Areas of the sensor that is masked to prevent it from receiving light. Used to calculate
   /// black levels and noise. Each tuple represents a masked rectangle's top, right, bottom, left
   pub blackareas: Vec<(u64,u64,u64,u64)>,
@@ -52,7 +55,7 @@ pub enum RawImageData {
 }
 
 impl RawImage {
-  #[doc(hidden)] pub fn new(camera: Camera, width: usize, height: usize, wb_coeffs: [f32;4], image: Vec<u16>, dummy: bool) -> RawImage {
+  #[doc(hidden)] pub fn new(camera: Camera, width: usize, height: usize, wb_coeffs: [f32;4], offset: usize, bps: usize, image: Vec<u16>, dummy: bool) -> RawImage {
     let blacks = if !dummy && (camera.blackareah.1 != 0 || camera.blackareav.1 != 0) {
       let mut avg = [0 as f32; 4];
       let mut count = [0 as f32; 4];
@@ -106,6 +109,8 @@ impl RawImage {
       xyz_to_cam: camera.xyz_to_cam,
       cfa: camera.cfa.clone(),
       crops: camera.crops,
+      bps: bps,
+      offset: offset,
       blackareas: blackareas,
       orientation: camera.orientation,
     }

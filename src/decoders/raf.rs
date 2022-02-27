@@ -81,11 +81,13 @@ impl<'a> Decoder for RafDecoder<'a> {
         xyz_to_cam: camera.xyz_to_cam,
         cfa: camera.cfa.clone(),
         crops: [0,0,0,0],
+        bps: bps,
+        offset: offset,
         blackareas: Vec::new(),
         orientation: camera.orientation,
       })
     } else {
-      ok_image(camera, width, height, self.get_wb()?, image)
+      ok_image(camera, width, height, self.get_wb()?, offset, bps, image)
     }
   }
 }

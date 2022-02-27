@@ -34,6 +34,6 @@ impl<'a> Decoder for NakedDecoder<'a> {
       }
     };
 
-    ok_image(self.camera.clone(), width, height, [NAN,NAN,NAN,NAN], image)
+    ok_image(self.camera.clone(), width, height, [NAN,NAN,NAN,NAN], 0, 0, image)
   }
 }

@@ -62,8 +62,8 @@ impl<'a> Decoder for OrfDecoder<'a> {
     };
 
     match self.get_blacks() {
-      Ok(val) => ok_image_with_blacklevels(camera, width, height, self.get_wb()?, val, image),
-      Err(_)  => ok_image(camera, width, height, self.get_wb()?, image),
+      Ok(val) => ok_image_with_blacklevels(camera, width, height, self.get_wb()?, val, offset, 0, image),
+      Err(_)  => ok_image(camera, width, height, self.get_wb()?, offset, 0, image),
     }
   }
 }

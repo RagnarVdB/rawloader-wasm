@@ -93,6 +93,6 @@ impl<'a> Decoder for MrwDecoder<'a> {
        f32::NAN]
     };
 
-    ok_image(camera, self.raw_width, self.raw_height, wb_coeffs, buffer)
+    ok_image(camera, self.raw_width, self.raw_height, wb_coeffs, 0, 0, buffer)
   }
 }

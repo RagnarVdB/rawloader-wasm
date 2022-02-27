@@ -146,7 +146,7 @@ impl<'a> Decoder for Cr2Decoder<'a> {
     };
 
     let wb = self.get_wb(&camera)?;
-    let mut img = RawImage::new(camera, width, height, wb, image, dummy);
+    let mut img = RawImage::new(camera, width, height, wb, offset, 0, image, dummy);
     if cpp == 3 {
       img.cpp = 3;
       img.width /= 3;
