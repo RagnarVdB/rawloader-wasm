@@ -128,6 +128,10 @@ impl Image{
         self.crops.clone()
     }
 
+    pub fn get_bps(&self) -> usize {
+      self.bps
+    }
+
     pub fn get_cfastr(&self) -> String {
         self.cfastr.clone()
     }
