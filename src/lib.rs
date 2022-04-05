@@ -76,6 +76,11 @@ pub struct Image {
     cfastr: String,
     cfawidth: usize,
     cfaheight: usize,
+    wb_coeffs: js_sys::Float32Array,
+    whitelevels: js_sys::Uint16Array,
+    blacklevels: js_sys::Uint16Array,
+    xyz_to_cam: js_sys::Float32Array,
+    cam_to_xyz: js_sys::Float32Array,
     bps: usize,
     offset: usize,
     encoding: Encoding
@@ -87,10 +92,6 @@ impl Image{
         self.data.clone()
     }
 
-    pub fn set_data(&mut self, data: js_sys::Uint16Array) {
-        self.data = data;
-    }
-
     pub fn get_original(&self) -> js_sys::Uint8Array {
         self.original.clone()
     }
@@ -99,16 +100,8 @@ impl Image{
         self.make.clone()
     }
 
-    pub fn set_make(&mut self, make: String) {
-        self.make = make;
-    }
-
     pub fn get_model(&self) -> String {
         self.model.clone()
-    }
-
-    pub fn set_model(&mut self, model: String) {
-        self.model = model;
     }
 
     pub fn get_width(&self) -> usize {
@@ -144,6 +137,26 @@ impl Image{
         self.cfaheight
     }
 
+    pub fn get_wb_coeffs(&self) -> js_sys::Float32Array {
+      self.wb_coeffs.clone()
+    }
+
+    pub fn get_whitelevels(&self) -> js_sys::Uint16Array {
+      self.whitelevels.clone()
+    }
+
+    pub fn get_blacklevels(&self) -> js_sys::Uint16Array {
+      self.blacklevels.clone()
+    }
+
+    pub fn get_xyz_to_cam(&self) -> js_sys::Float32Array {
+      self.xyz_to_cam.clone()
+    }
+
+    pub fn get_cam_to_xyz(&self) -> js_sys::Float32Array {
+      self.cam_to_xyz.clone()
+    }
+
     pub fn encode(&self, image: js_sys::Uint16Array) -> js_sys::Uint8Array {
       let image_vec: Vec<u16> = image.to_vec();
       // panic!("{}", image_vec.len());
@@ -155,10 +168,36 @@ impl Image{
     }
 }
 
-pub fn to_js(arr: &[usize]) -> js_sys::Uint16Array {
+pub fn usize_to_js_u16(arr: &[usize]) -> js_sys::Uint16Array {
   let jsarr = js_sys::Uint16Array::new_with_length(arr.len() as u32);
   for (i, x) in arr.iter().enumerate() {
       jsarr.set_index(i as u32, x.clone() as u16)
+  }
+  jsarr
+}
+
+pub fn u16_to_js_u16(arr: &[u16]) -> js_sys::Uint16Array {
+  let jsarr = js_sys::Uint16Array::new_with_length(arr.len() as u32);
+  for (i, x) in arr.iter().enumerate() {
+    jsarr.set_index(i as u32, x.clone() as u16)
+  }
+  jsarr
+}
+
+pub fn f32_to_js_f32(arr: &[f32]) -> js_sys::Float32Array {
+  let jsarr = js_sys::Float32Array::new_with_length(arr.len() as u32);
+  for (i, x) in arr.iter().enumerate() {
+    jsarr.set_index(i as u32, x.clone() as f32)
+  }
+  jsarr
+}
+
+pub fn flatten_matrix<const N: usize, const M: usize>(matrix: &[[f32;M];N]) -> js_sys::Float32Array {
+  let jsarr = js_sys::Float32Array::new_with_length((N*M) as u32);
+  for (i, row) in matrix.iter().enumerate() {
+    for (j, x) in row.iter().enumerate() {
+      jsarr.set_index((i*M + j) as u32, x.clone() as f32)
+    }
   }
   jsarr
 }
@@ -168,21 +207,27 @@ pub fn decode_image(arr: js_sys::Uint8Array) -> Image{
   console_error_panic_hook::set_once();
   let vec = &arr.to_vec();
   let image = decode_file_vec(vec).unwrap();
+  let m = &image.cam_to_xyz().clone();
   let vector = match image.data {
       RawImageData::Integer(vec) => vec,
       _ => panic!("cannot decode floats yet")
     };
 
   let result = Image {
-      make: image.make,
-      model: image.model,
-      width: image.width,
-      height: image.height,
-      cpp: image.cpp,
-      crops: to_js(&image.crops),
-      cfastr: image.cfa.name,
-      cfawidth: image.cfa.width,
-      cfaheight: image.cfa.height,
+      make: image.make.clone(),
+      model: image.model.clone(),
+      width: image.width.clone(),
+      height: image.height.clone(),
+      cpp: image.cpp.clone(),
+      crops: usize_to_js_u16(&image.crops),
+      cfastr: image.cfa.name.clone(),
+      cfawidth: image.cfa.width.clone(),
+      cfaheight: image.cfa.height.clone(),
+      wb_coeffs: f32_to_js_f32(&image.wb_coeffs),
+      whitelevels: u16_to_js_u16(&image.whitelevels),
+      blacklevels: u16_to_js_u16(&image.blacklevels),
+      xyz_to_cam: flatten_matrix(&image.xyz_to_cam),
+      cam_to_xyz: flatten_matrix(m),
       bps: image.bps,
       offset: image.offset,
       encoding: image.encoding,
