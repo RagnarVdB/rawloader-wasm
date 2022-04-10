@@ -79,6 +79,7 @@ pub struct Image {
     wb_coeffs: js_sys::Float32Array,
     whitelevels: js_sys::Uint16Array,
     blacklevels: js_sys::Uint16Array,
+    orientation: String,
     xyz_to_cam: js_sys::Float32Array,
     cam_to_xyz: js_sys::Float32Array,
     bps: usize,
@@ -149,6 +150,10 @@ impl Image{
       self.blacklevels.clone()
     }
 
+    pub fn get_orientation(&self) -> String {
+      self.orientation.clone()
+    }
+
     pub fn get_xyz_to_cam(&self) -> js_sys::Float32Array {
       self.xyz_to_cam.clone()
     }
@@ -213,6 +218,19 @@ pub fn decode_image(arr: js_sys::Uint8Array) -> Image{
       _ => panic!("cannot decode floats yet")
     };
 
+
+  let orientationString = match image.orientation {
+    Normal => "Normal",
+    HorizontalFlip => "HorizontalFlip",
+    Rotate180 => "Rotate180",
+    VerticalFlip => "VerticalFlip",
+    Transpose => "Transpose",
+    Rotate90 => "Rotate90",
+    Transverse => "Transverse",
+    Rotate270 => "Rotate270",
+    Unknown => "Unknown",
+  };
+
   let result = Image {
       make: image.make.clone(),
       model: image.model.clone(),
@@ -226,6 +244,7 @@ pub fn decode_image(arr: js_sys::Uint8Array) -> Image{
       wb_coeffs: f32_to_js_f32(&image.wb_coeffs),
       whitelevels: u16_to_js_u16(&image.whitelevels),
       blacklevels: u16_to_js_u16(&image.blacklevels),
+      orientation: orientationString.to_owned(),
       xyz_to_cam: flatten_matrix(&image.xyz_to_cam),
       cam_to_xyz: flatten_matrix(m),
       bps: image.bps,
