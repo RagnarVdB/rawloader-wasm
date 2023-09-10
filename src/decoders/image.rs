@@ -38,11 +38,18 @@ pub struct RawImage {
   /// Areas of the sensor that is masked to prevent it from receiving light. Used to calculate
   /// black levels and noise. Each tuple represents a masked rectangle's top, right, bottom, left
   pub blackareas: Vec<(u64,u64,u64,u64)>,
-
   /// orientation of the image as indicated by the image metadata
   pub orientation: Orientation,
+  /// type of encoding, used to encode again
+  pub encoding: Encoding,
   /// image data itself, has `width`\*`height`\*`cpp` elements
   pub data: RawImageData,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Encoding {
+  Fuji,
+  NotImplemented
 }
 
 /// The actual image data, after decoding
@@ -55,7 +62,7 @@ pub enum RawImageData {
 }
 
 impl RawImage {
-  #[doc(hidden)] pub fn new(camera: Camera, width: usize, height: usize, wb_coeffs: [f32;4], offset: usize, bps: usize, image: Vec<u16>, dummy: bool) -> RawImage {
+  #[doc(hidden)] pub fn new(camera: Camera, width: usize, height: usize, wb_coeffs: [f32;4], offset: usize, bps: usize, encoding: Encoding, image: Vec<u16>, dummy: bool) -> RawImage {
     let blacks = if !dummy && (camera.blackareah.1 != 0 || camera.blackareav.1 != 0) {
       let mut avg = [0 as f32; 4];
       let mut count = [0 as f32; 4];
@@ -113,6 +120,7 @@ impl RawImage {
       offset: offset,
       blackareas: blackareas,
       orientation: camera.orientation,
+      encoding: encoding
     }
   }
 

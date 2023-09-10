@@ -103,6 +103,10 @@ pub trait Decoder {
   fn image(&self, dummy: bool) -> Result<RawImage, String>;
 }
 
+pub trait Encoder {
+  fn encode(&self, new: Vec<u16>) -> Vec<u8>;
+}
+
 /// Buffer to hold an image in memory with enough extra space at the end for speed optimizations
 #[derive(Debug, Clone)]
 pub struct Buffer {
@@ -324,18 +328,18 @@ impl Orientation {
   }
 }
 
-pub fn ok_image(camera: Camera, width: usize, height: usize, wb_coeffs: [f32;4], offset: usize, bps: usize, image: Vec<u16>) -> Result<RawImage,String> {
-  Ok(RawImage::new(camera, width, height, wb_coeffs, offset, bps, image, false))
+pub fn ok_image(camera: Camera, width: usize, height: usize, wb_coeffs: [f32;4], offset: usize, bps: usize, encoding: Encoding, image: Vec<u16>) -> Result<RawImage,String> {
+  Ok(RawImage::new(camera, width, height, wb_coeffs, offset, bps, encoding, image, false))
 }
 
-pub fn ok_image_with_blacklevels(camera: Camera, width: usize, height: usize, wb_coeffs: [f32;4], blacks: [u16;4], offset: usize, bps: usize, image: Vec<u16>) -> Result<RawImage,String> {
-  let mut img = RawImage::new(camera, width, height, wb_coeffs, offset, bps, image, false);
+pub fn ok_image_with_blacklevels(camera: Camera, width: usize, height: usize, wb_coeffs: [f32;4], blacks: [u16;4], offset: usize, bps: usize, encoding: Encoding, image: Vec<u16>) -> Result<RawImage,String> {
+  let mut img = RawImage::new(camera, width, height, wb_coeffs, offset, bps, encoding, image, false);
   img.blacklevels = blacks;
   Ok(img)
 }
 
-pub fn ok_image_with_black_white(camera: Camera, width: usize, height: usize, wb_coeffs: [f32;4], black: u16, white: u16, offset: usize, bps: usize, image: Vec<u16>) -> Result<RawImage,String> {
-  let mut img = RawImage::new(camera, width, height, wb_coeffs, offset, bps, image, false);
+pub fn ok_image_with_black_white(camera: Camera, width: usize, height: usize, wb_coeffs: [f32;4], black: u16, white: u16, offset: usize, bps: usize, encoding: Encoding, image: Vec<u16>) -> Result<RawImage,String> {
+  let mut img = RawImage::new(camera, width, height, wb_coeffs, offset, bps, encoding, image, false);
   img.blacklevels = [black, black, black, black];
   img.whitelevels = [white, white, white, white];
   Ok(img)
@@ -539,6 +543,42 @@ impl RawLoader {
     };
     let mut buffered_file = BufReader::new(file);
     self.decode(&mut buffered_file, false)
+  }
+
+  /// Decode input into a RawImage
+  pub fn decode_vec(&self, vec: &Vec<u8>, dummy: bool) -> Result<RawImage,String> {
+    let mut vector = vec.clone();
+    let size = vector.len();
+    vector.extend([0;16].iter().cloned());
+    let buffer = Buffer {
+      buf: vector,
+      size: size,
+    };
+
+    match panic::catch_unwind(|| {
+      self.decode_unsafe(&buffer, dummy)
+    }) {
+      Ok(val) => val,
+      Err(_) => Err(format!("Caught a panic while decoding.{}", BUG).to_string()),
+    }
+  }
+
+  /// Decode array into RawImage
+  pub fn decode_file_vec(&self, vec: &Vec<u8>) -> Result<RawImage,String> {
+    self.decode_vec(&vec, false)
+  }
+
+  pub fn get_encoder(&self, encoding: Encoding, original: Vec<u8>, bps: usize, offset: usize) -> Result<Box<dyn Encoder>, String> {
+    match encoding {
+      Encoding::Fuji => Ok(Box::new(raf::RafEncoder::new(original, bps, offset))),
+      Encoding::NotImplemented => Err("This type cannot be encoded yet".to_owned())
+    }
+  }
+
+  pub fn encode(&self, original: Vec<u8>, new: Vec<u16>, bps: usize, offset: usize, encoding: Encoding) -> Result<Vec<u8>, String> {
+    let encoder = self.get_encoder(encoding, original, bps, offset)?;
+    // panic!("{}", new.len());
+    Ok(encoder.encode(new))
   }
 
   // Decodes an unwrapped input (just the image data with minimal metadata) into a RawImage

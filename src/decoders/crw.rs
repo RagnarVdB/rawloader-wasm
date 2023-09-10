@@ -97,7 +97,7 @@ impl<'a> Decoder for CrwDecoder<'a> {
     };
 
     let wb = self.get_wb(&camera)?;
-    ok_image(camera, width, height, wb, 0, 0, image)
+    ok_image(camera, width, height, wb, 0, 0, Encoding::NotImplemented, image)
   }
 }
 

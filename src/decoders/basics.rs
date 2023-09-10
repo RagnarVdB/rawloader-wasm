@@ -1,5 +1,4 @@
 use byteorder::{BigEndian, LittleEndian, ByteOrder};
-use rayon::prelude::*;
 
 pub use crate::decoders::packed::*;
 pub use crate::decoders::pumps::*;
@@ -84,7 +83,7 @@ pub fn decode_threaded<F>(width: usize, height: usize, dummy: bool, closure: &F)
   where F : Fn(&mut [u16], usize)+Sync {
 
   let mut out: Vec<u16> = alloc_image!(width, height, dummy);
-    out.par_chunks_mut(width).enumerate().for_each(|(row, line)| {
+    out.chunks_mut(width).enumerate().for_each(|(row, line)| {
     closure(line, row);
   });
   out
@@ -94,7 +93,7 @@ pub fn decode_threaded_multiline<F>(width: usize, height: usize, lines: usize, d
   where F : Fn(&mut [u16], usize)+Sync {
 
   let mut out: Vec<u16> = alloc_image!(width, height, dummy);
-  out.par_chunks_mut(width*lines).enumerate().for_each(|(row, line)| {
+  out.chunks_mut(width*lines).enumerate().for_each(|(row, line)| {
     closure(line, row*lines);
   });
   out

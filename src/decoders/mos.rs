@@ -49,7 +49,7 @@ impl<'a> Decoder for MosDecoder<'a> {
       x => return Err(format!("MOS: unsupported compression {}", x).to_string())
     };
 
-    ok_image(camera, width, height, self.get_wb()?, offset, 0,  image)
+    ok_image(camera, width, height, self.get_wb()?, offset, 0, Encoding::NotImplemented, image)
   }
 }
 

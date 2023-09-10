@@ -134,7 +134,7 @@ impl<'a> Decoder for X3fDecoder<'a> {
       x => return Err(format!("X3F Don't know how to decode format {}", x).to_string())
     };
 
-    let mut img = RawImage::new(camera, width, height, self.get_wb()?, offset, 0, image, dummy);
+    let mut img = RawImage::new(camera, width, height, self.get_wb()?, offset, 0, Encoding::NotImplemented, image, dummy);
     img.cpp = 3;
     Ok(img)
   }

@@ -4,6 +4,9 @@ use crate::decoders::*;
 use crate::decoders::tiff::*;
 use crate::decoders::basics::*;
 
+
+extern crate web_sys;
+
 #[derive(Debug, Clone)]
 pub struct RafDecoder<'a> {
   buffer: &'a [u8],
@@ -85,9 +88,10 @@ impl<'a> Decoder for RafDecoder<'a> {
         offset: offset,
         blackareas: Vec::new(),
         orientation: camera.orientation,
+        encoding: Encoding::Fuji
       })
     } else {
-      ok_image(camera, width, height, self.get_wb()?, offset, bps, image)
+      ok_image(camera, width, height, self.get_wb()?, offset, bps, Encoding::Fuji, image)
     }
   }
 }
@@ -144,5 +148,38 @@ impl<'a> RafDecoder<'a> {
 
       (rotatedwidth, rotatedheight, out)
     }
+  }
+}
+
+
+pub struct RafEncoder {
+  original: Vec<u8>,
+  bps: usize,
+  offset: usize,
+}
+
+impl RafEncoder {
+  pub fn new(original: Vec<u8>, bps: usize, offset: usize) -> RafEncoder {
+    RafEncoder{
+      original,
+      bps,
+      offset
+    }
+  }
+}
+
+impl Encoder for RafEncoder {
+  fn encode(&self, new: Vec<u16>) -> Vec<u8> {
+    let mut out = self.original.clone();
+    // panic!("{}, {}", out.len(), new.len());
+    let offset = self.offset;
+    let n = new.len();
+    web_sys::console::log_1(&format!("n: {}", n).into());
+    for (i, value) in new.into_iter().enumerate() {
+      let bytes = value.to_le_bytes();
+      out[offset + i*2] = bytes[0];
+      out[offset + i*2 + 1] = bytes[1];
+    }
+    out
   }
 }

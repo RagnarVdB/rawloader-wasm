@@ -42,7 +42,7 @@ impl<'a> Decoder for DcrDecoder<'a> {
 
     let image = DcrDecoder::decode_kodak65000(src, &curve, width, height, dummy);
 
-    ok_image(camera, width, height, self.get_wb()?, offset, 0, image)
+    ok_image(camera, width, height, self.get_wb()?, offset, 0, Encoding::NotImplemented, image)
   }
 }
 
