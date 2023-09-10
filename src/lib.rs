@@ -220,15 +220,15 @@ pub fn decode_image(arr: js_sys::Uint8Array) -> Image{
 
 
   let orientationString = match image.orientation {
-    Normal => "Normal",
-    HorizontalFlip => "HorizontalFlip",
-    Rotate180 => "Rotate180",
-    VerticalFlip => "VerticalFlip",
-    Transpose => "Transpose",
-    Rotate90 => "Rotate90",
-    Transverse => "Transverse",
-    Rotate270 => "Rotate270",
-    Unknown => "Unknown",
+    decoders::Orientation::Normal => "Normal",
+    decoders::Orientation::HorizontalFlip => "HorizontalFlip",
+    decoders::Orientation::Rotate180 => "Rotate180",
+    decoders::Orientation::VerticalFlip => "VerticalFlip",
+    decoders::Orientation::Transpose => "Transpose",
+    decoders::Orientation::Rotate90 => "Rotate90",
+    decoders::Orientation::Transverse => "Transverse",
+    decoders::Orientation::Rotate270 => "Rotate270",
+    decoders::Orientation::Unknown => "Unknown",
   };
 
   let result = Image {
